@@ -37,4 +37,4 @@ install:
 	cp $(TARGET) /usr/local/bin
 
 uninstall:
-	rm /usr/local/bin/$(TARGET_FILE)
+	rm /usr/local/bin/$(TARGET_NAME)
