@@ -145,7 +145,7 @@ int stivector_insert(stivector *vector, size_t index, void *element) {
     // welcome to hell
     memmove(vector->data + (index + 1) * vector->element_size,
             vector->data + index * vector->element_size,
-            vector->element_size * (vector->size - index));
+            vector->element_size * (vector->size - 1- index));
 
     //element insertion
     memmove(vector->data + index * vector->element_size, element, vector->element_size);
@@ -180,7 +180,7 @@ int stivector_erase(stivector *vector, size_t index) {
     // welcome to hell part 2
     memmove(vector->data + index * vector->element_size,
             vector->data + (index + 1) * vector->element_size,
-            vector->element_size * (vector->size - index));
+            vector->element_size * (vector->size - 1 - index));
 
     vector->size--;
 
