@@ -90,6 +90,9 @@ IDButton createButton (Rectangle rec, float border, Color color) {
 
 IDButton* createButtonArray(size_t arrayLength, float buttonWidth, float buttonHeight, float borderSize) {  
     IDButton *buttons = (IDButton*)malloc(arrayLength * sizeof(IDButton));
+    if (buttons == NULL) {
+        exit(-1);
+    }
     
     for (size_t i = 0; i < arrayLength; i++) {
         buttons[i] = createButton((Rectangle){ (float)i * (buttonWidth + borderSize), 0.0f, buttonWidth, buttonHeight }, borderSize, GREEN);
