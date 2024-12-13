@@ -1,29 +1,28 @@
 // TODO : make it not suck
 
 
-
+#include <stdint.h>
 #include "stivector.h"
 #include "raylib.h"
 
-
 // constants
-#define DO_LIMIT_FPS 1
-#define MAX_FPS 1000
-#define SHOW_FPS_COUNT 0
+const int DO_LIMIT_FPS 1
+const int MAX_FPS 1000
+const bool SHOW_FPS_COUNT 0
 
-#define INIT_WINDOW_WIDTH 600
-#define INIT_WINDOW_HEIGHT 75
+const int INIT_WINDOW_WIDTH 600
+const int INIT_WINDOW_HEIGHT 75
 
-#define WINDOW_WIDTH 800
-#define WINDOW_HEIGHT 600
+const int WINDOW_WIDTH 800
+const int WINDOW_HEIGHT 600
 
-#define BACKGROUND_COLOR BLACK
+const Color BACKGROUND_COLOR BLACK
 
-#define BUTTON_COUNT 7 // set to 8 for 6 fret
-#define BUTTON_BORDER_SIZE 3.0f
-#define BUTTON_WIDTH (float)GetScreenWidth() / BUTTON_COUNT - BUTTON_BORDER_SIZE
-#define BUTTON_HEIGHT BUTTON_WIDTH 
-#define BAR_SPEED 400.0f
+const int BUTTON_COUNT 7 // set to 8 for 6 fret
+const float BUTTON_BORDER_SIZE 3.0f
+const float BUTTON_WIDTH (float)GetScreenWidth() / BUTTON_COUNT - BUTTON_BORDER_SIZE
+const float BUTTON_HEIGHT BUTTON_WIDTH 
+const float BAR_SPEED 400.0f
 
 
 // keybinds
@@ -463,7 +462,7 @@ void drawControllerSelectorEntry(int index, int pos, Font font, const char *game
 void drawControllerSwitcherUI(int *gamepadCount, int *selectedGamepad) {
     drawControllerSelectorTitle(GetFontDefault(), clamp(min((float)GetScreenWidth(), (float)GetScreenHeight()) * 0.1f, 24.0f, 40.0f), 2.0f);
 
-    for (int16_t i = 0, pos = 0; i < *gamepadCount; i++, pos++) {
+    for (int i = 0, pos = 0; i < *gamepadCount; i++, pos++) {
         const char *gamepadName = GetGamepadName(i);
 
         if (*gamepadName != '\0') {
