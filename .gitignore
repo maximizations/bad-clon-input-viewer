@@ -32,3 +32,6 @@ bin/**
 *.exe
 *.out
 *.app
+dryrun.log
+targets.log
+inputviewer
