@@ -23,7 +23,7 @@ const float BUTTON_BORDER_SIZE = 3.0f;
 
 const float BAR_SPEED = 400.0f;
 
-#define BUTTON_WIDTH (float)GetScreenWidth() / (float)(BUTTON_COUNT - BUTTON_BORDER_SIZE)
+#define BUTTON_WIDTH (float)GetScreenWidth() / BUTTON_COUNT - BUTTON_BORDER_SIZE
 #define BUTTON_HEIGHT BUTTON_WIDTH
 
 // keybinds
