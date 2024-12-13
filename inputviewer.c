@@ -307,8 +307,7 @@ void updateButton(IDButton *buttons, size_t buttonIndex, int *screenWidth, bool 
 
 void updateButtons(IDButton *buttons, size_t arrayLength, int *screenWidth, int *clickedButton, IDGamepadState *gamepadState, IDScene *currentScene) {
     bool screenWidthChanged = 0;
-    int recheckedScreenWidth = GetScreenWidth();
-    
+        
     for (size_t i = 0; i < arrayLength; i++) {
         updateButton(buttons, i, screenWidth, &screenWidthChanged, clickedButton, gamepadState);
     }
