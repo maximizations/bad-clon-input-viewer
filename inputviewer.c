@@ -1,4 +1,5 @@
 // TODO : make it not suck
+// im making a bit of progress -- its now like acceptable lmao
 
 
 #include <stdint.h>
@@ -8,7 +9,7 @@
 // constants
 const int DO_LIMIT_FPS = 1;
 const int MAX_FPS = 1000;
-const bool SHOW_FPS_COUNT = 0;
+const bool SHOW_FPS_COUNT = 1;
 
 const int INIT_WINDOW_WIDTH = 600;
 const int INIT_WINDOW_HEIGHT = 75;
@@ -41,6 +42,8 @@ const float BAR_SPEED = 400.0f;
 
 
 // """""scenes""""" (there are only 2 lmao)
+// TODO : turn this into IDSceneID and make a struct with needsScreenWidth and needsScreenHeight so i can compute them only when needed
+//        without doing it in my update functions
 typedef enum {
     INPUT_VIEWER,
     CONTROLLER_SELECTOR
@@ -60,7 +63,6 @@ typedef struct {
     stivector idbarVector;
 } IDButton;
 
-
 // bars
 typedef struct {
     Rectangle rectangle;
@@ -68,6 +70,12 @@ typedef struct {
     bool is_held;
 } IDBar;
 
+// gamepad state
+typedef struct {
+    int gamepadCount;
+    int selectedGamepad;
+    bool gamepadNeedsRefresh;
+} IDGamepadState;
 
 // button creation functions
 IDButton createButton (Rectangle rec, float border, Color color) {
@@ -79,7 +87,7 @@ IDButton createButton (Rectangle rec, float border, Color color) {
         button.updateTime = GetTime();
         button.color = color;
         button.key = 0;
-        button.pressed = false;
+        button.pressed = 0;
 
         //stivector vector;
         //button.idbarVector = vector;
@@ -91,7 +99,8 @@ IDButton createButton (Rectangle rec, float border, Color color) {
 IDButton* createButtonArray(size_t arrayLength, float buttonWidth, float buttonHeight, float borderSize) {  
     IDButton *buttons = (IDButton*)malloc(arrayLength * sizeof(IDButton));
     if (buttons == NULL) {
-        exit(-1);
+        CloseWindow();
+        return NULL;
     }
     
     for (size_t i = 0; i < arrayLength; i++) {
@@ -122,6 +131,12 @@ void setButtonColor6Fret(IDButton *buttons) {
    buttons[7].color = LIGHTGRAY;
 }
 
+// initialize our gamepad state
+void initGamepadState(IDGamepadState *gamepadState) {
+    gamepadState->gamepadCount = 0;
+    gamepadState->selectedGamepad = 0;
+    gamepadState->gamepadNeedsRefresh = 1;
+}
 
 // bar update functions
 IDBar createBar (IDButton *button) {
@@ -131,7 +146,7 @@ IDBar createBar (IDButton *button) {
                                      button->rectangle.width - button->border - button->border,
                                      BAR_SPEED * GetFrameTime() };
         bar.color = button->color;
-        bar.is_held = true;
+        bar.is_held = 1;
 
     return bar;
 }
@@ -183,13 +198,12 @@ void releaseBar (IDButton *button) {
     IDBar *heldBar = (IDBar*)stivector_at(&(button->idbarVector), button->idbarVector.size - 1);
 
     heldBar->is_held = 0;
-
 }
 
 
 // button update functions
-void buttonInputReleased (IDButton *button, int *selectedGamepad) {
-    if (IsGamepadButtonReleased(*selectedGamepad, button->key)) {
+void buttonInputReleased (IDButton *button, IDGamepadState *gamepadState) {
+    if (IsGamepadButtonReleased(gamepadState->selectedGamepad, button->key)) {
         releaseBar(button); 
     }
 }
@@ -208,17 +222,17 @@ bool isButtonClicked(IDButton *button) {
     return 0;
 }
 
-void setButtonPressed(IDButton *button, int *selectedGamepad) {
-    if (IsGamepadButtonDown(*selectedGamepad, button->key)) {
-        button->pressed = true;
+void setButtonPressed(IDButton *button, IDGamepadState *gamepadState) {
+    if (IsGamepadButtonDown(gamepadState->selectedGamepad, button->key)) {
+        button->pressed = 1;
         updateTimer(button);
     } else {
-        button->pressed = false;
+        button->pressed = 0;
     }
 }
 
-void buttonInputPressed(IDButton *button, int *selectedGamepad) {
-    if (IsGamepadButtonPressed(*selectedGamepad, button->key)) {
+void buttonInputPressed(IDButton *button, IDGamepadState *gamepadState) {
+    if (IsGamepadButtonPressed(gamepadState->selectedGamepad, button->key)) {
         button->inputCount++;
         button->initTime = GetTime();
         IDBar newBar = createBar(button);
@@ -227,8 +241,9 @@ void buttonInputPressed(IDButton *button, int *selectedGamepad) {
     }
 }
 
-void updateButtonSize(IDButton *button, int index) {
-    button->rectangle.width = BUTTON_WIDTH;
+void updateButtonSize(IDButton *button, int index /*TODO: next parameter needs to go*/, int recheckedScreenWidth) {
+    // button->rectangle.width = BUTTON_WIDTH; TODO WHEN I FIX MY SPAGHETTI
+    button->rectangle.width = (float)recheckedScreenWidth / BUTTON_COUNT - BUTTON_BORDER_SIZE;
     button->rectangle.height = BUTTON_HEIGHT;
     button->rectangle.x = (float)index * (button->rectangle.width + button->border);
 }
@@ -243,55 +258,69 @@ void updateClickedButton(IDButton *button, int *clickedButton) {
 }
 
 // this one is on its own
-void setGamepadCount(int *gamepadCount, int *selectedGamepad) {
-    while (IsGamepadAvailable(*gamepadCount)) {
-        (*gamepadCount)++;
+void setGamepadCount(IDGamepadState *gamepadState) {
+    while (IsGamepadAvailable(gamepadState->gamepadCount)) {
+        (gamepadState->gamepadCount)++;
     }
-    while (!IsGamepadAvailable(*gamepadCount) && *gamepadCount > 0) {
-        (*gamepadCount)--;
-        while (*selectedGamepad > *gamepadCount - 1) {
-            (*selectedGamepad)--;
+    while (!IsGamepadAvailable(gamepadState->gamepadCount) && gamepadState->gamepadCount > 0) {
+        (gamepadState->gamepadCount)--;
+        while (gamepadState->selectedGamepad > gamepadState->gamepadCount - 1) {
+            (gamepadState->selectedGamepad)--;
         }
     }
 }
 
+void manageButtonClicked(IDButton *buttons, int *clickedButton) {
+        IDButton *currentClickedButton = &buttons[*clickedButton];
+
+        releaseBar(currentClickedButton);
+        updateClickedButton(currentClickedButton, clickedButton);
+}
+
+void manageButtonInput(IDButton *button, IDGamepadState *gamepadState) {
+        setButtonPressed(button, gamepadState);
+        buttonInputPressed(button, gamepadState);
+        buttonInputReleased(button, gamepadState);
+}
 
 // big button update function
-void updateButtons(IDButton *buttons, size_t arrayLength, int *screenWidth, int *clickedButton, int *selectedGamepad, IDScene *currentScene, bool *gamepadNeedsRefresh) {
-    bool screenWidthChanged = 0;
+void updateButton(IDButton *buttons, size_t buttonIndex, int *screenWidth, int recheckedScreenWidth, bool *screenWidthChanged, int *clickedButton, IDGamepadState *gamepadState) {
+    IDButton *currentButton = &buttons[buttonIndex];
     
-    for (size_t i = 0; i < arrayLength; i++) {
-        IDButton *currentButton = &buttons[i];
-
-        // update the size of the buttons if the screen width changes
-        if (*screenWidth != GetScreenWidth()) {
-            updateButtonSize(currentButton, i);
-            screenWidthChanged = 1;
-        }
-
-        if (isButtonClicked(currentButton) && *clickedButton < 0) {
-            *clickedButton = i;
-            currentButton->pressed = 1;
-        }
-
-        if (*clickedButton < 0) {
-            setButtonPressed(currentButton, selectedGamepad);
-
-            buttonInputPressed(currentButton, selectedGamepad);
-            buttonInputReleased(currentButton, selectedGamepad);
-        } else {
-            IDButton *currentClickedButton = &buttons[*clickedButton];
-
-            releaseBar(currentClickedButton);
-            updateClickedButton(currentClickedButton, clickedButton);
-        }
-
-        cleanBarVec(currentButton);
-        updateBarVec(currentButton);
+    // update the size of the buttons if the screen width changes
+    if (*screenWidth != recheckedScreenWidth) {
+        updateButtonSize(currentButton, buttonIndex, recheckedScreenWidth);
+        *screenWidthChanged = 1;
     }
 
+    // for when a button is left clicked, so you can set a keybind
+    if (isButtonClicked(currentButton) && *clickedButton < 0) {
+        *clickedButton = buttonIndex;
+        currentButton->pressed = 1;
+    }
+
+    if (*clickedButton < 0) {
+        manageButtonInput(currentButton, gamepadState);
+    } else {
+        manageButtonClicked(buttons, clickedButton);
+    }
+
+    // deal with the idbars
+    cleanBarVec(currentButton);
+    updateBarVec(currentButton);
+}
+
+void updateButtons(IDButton *buttons, size_t arrayLength, int *screenWidth, int *clickedButton, IDGamepadState *gamepadState, IDScene *currentScene) {
+    bool screenWidthChanged = 0;
+    int recheckedScreenWidth = GetScreenWidth();
+    
+    for (size_t i = 0; i < arrayLength; i++) {
+        updateButton(buttons, i, screenWidth, recheckedScreenWidth, &screenWidthChanged, clickedButton, gamepadState);
+    }
+
+    // updates the screen width -- could belong somewhere else -- TODO
     if (screenWidthChanged) {
-        *screenWidth = GetScreenWidth();
+        *screenWidth = recheckedScreenWidth;
     }
     
     if (ID_KEY_BREAK) {
@@ -300,35 +329,35 @@ void updateButtons(IDButton *buttons, size_t arrayLength, int *screenWidth, int 
 
     if (ID_KEY_ENTER && *clickedButton < 0) {
         *currentScene = CONTROLLER_SELECTOR;
-        *gamepadNeedsRefresh = 1;
+        gamepadState->gamepadNeedsRefresh = 1;
     }
 }
 
 
 // big controller switcher ui update function
-void updateControllerSwitcherUI(int *gamepadCount, int *selectedGamepad, bool *gamepadNeedsRefresh, IDScene *currentScene) {
-    if (ID_KEY_DOWN && *selectedGamepad < *gamepadCount - 1) {
-        (*selectedGamepad)++;
-        while (!IsGamepadAvailable(*selectedGamepad)) {
-            (*selectedGamepad)++;
-            if (*selectedGamepad >= *gamepadCount - 1) {
+void updateControllerSwitcherUI(IDGamepadState *gamepadState, IDScene *currentScene) {
+    if (ID_KEY_DOWN && gamepadState->selectedGamepad < gamepadState->gamepadCount - 1) {
+        (gamepadState->selectedGamepad)++;
+        while (!IsGamepadAvailable(gamepadState->selectedGamepad)) {
+            (gamepadState->selectedGamepad)++;
+            if (gamepadState->selectedGamepad >= gamepadState->gamepadCount - 1) {
                 break;
             }
         }
     }
 
-    if (ID_KEY_UP && *selectedGamepad > 0) {
-        (*selectedGamepad)--;
-        while (!IsGamepadAvailable(*selectedGamepad)) {
-            (*selectedGamepad)--;
-            if (*selectedGamepad <= 0) {
+    if (ID_KEY_UP && gamepadState->selectedGamepad > 0) {
+        (gamepadState->selectedGamepad)--;
+        while (!IsGamepadAvailable(gamepadState->selectedGamepad)) {
+            (gamepadState->selectedGamepad)--;
+            if (gamepadState->selectedGamepad <= 0) {
                 break;
             }
         }
     }
     
     if (ID_KEY_REFRESH) {
-        *gamepadNeedsRefresh = 1;
+        gamepadState->gamepadNeedsRefresh = 1;
     }
 
     if (ID_KEY_ENTER) {
@@ -339,14 +368,6 @@ void updateControllerSwitcherUI(int *gamepadCount, int *selectedGamepad, bool *g
 
 // DRAWING FUNCTIONS
 
-
-// on its own 
-void drawFPSCount() {
-    char fpscount[8];
-    snprintf(fpscount, 8, "%d", GetFPS());
-    
-    DrawText(fpscount, GetScreenWidth() - MeasureText(fpscount, 20), 0, 20, GREEN);
-}
 
 
 // button drawing functions
@@ -449,12 +470,12 @@ void drawControllerSelectorTitle(Font font, float fontSize, float fontSpacing) {
     DrawTextEx(font, "Controller selector", textPosition,  fontSize, fontSpacing, WHITE);
 }
 
-void drawControllerSelectorEntry(int index, int pos, Font font, const char *gamepadName, float fontSize, float fontSpacing, int *selectedGamepad) {
-    Vector2 textPosition = (Vector2){ GetScreenWidth() * 0.125f, pos * fontSize + GetScreenHeight() * 0.25f };
+void drawControllerSelectorEntry(int index, int pos, Font font, const char *gamepadName, float fontSize, float fontSpacing, IDGamepadState *gamepadState, int screenWidth, int screenHeight) {
+    Vector2 textPosition = (Vector2){ screenWidth * 0.125f, pos * fontSize + screenHeight * 0.25f };
     
     Color textColor = WHITE; 
     
-    if (index == *selectedGamepad) {
+    if (index == gamepadState->selectedGamepad) {
         textColor = BLUE;
         drawControllerSelectorTriangle(fontSize, textPosition, textColor);
     }
@@ -463,14 +484,21 @@ void drawControllerSelectorEntry(int index, int pos, Font font, const char *game
 }
 
 // TODO: THIS FUNCTION IS ASS AND HAS BASICALLY NO THOUGHT PUT INTO IT, 2 BE REWRITTEN LOL THERE IS NO LOGIC BEHIND ANYTHING 
-void drawControllerSwitcherUI(int *gamepadCount, int *selectedGamepad) {
-    drawControllerSelectorTitle(GetFontDefault(), clamp(min((float)GetScreenWidth(), (float)GetScreenHeight()) * 0.1f, 24.0f, 40.0f), 2.0f);
+void drawControllerSwitcherUI(IDGamepadState *gamepadState) {
+    //TODO : more global management of this, less confusing mess
+    int screenWidth = GetScreenWidth();
+    int screenHeight = GetScreenHeight();
 
-    for (int i = 0, pos = 0; i < *gamepadCount; i++, pos++) {
+    float titleFontSize = clamp(min((float)screenWidth, (float)screenHeight) * 0.1f, 24.0f, 40.0f);
+    drawControllerSelectorTitle(GetFontDefault(), titleFontSize , 2.0f);
+
+    for (int i = 0, pos = 0; i < gamepadState->gamepadCount; i++, pos++) {
         const char *gamepadName = GetGamepadName(i);
 
         if (*gamepadName != '\0') {
-            drawControllerSelectorEntry(i, pos, GetFontDefault(), gamepadName, clamp(min((float)GetScreenWidth(), (float)GetScreenHeight()) * 0.05f, 16.0f, 24.0f) , 2.0f, selectedGamepad);
+            float entryFontSize = clamp(min((float)screenWidth, (float)screenHeight) * 0.05f, 16.0f, 24.0f);
+
+            drawControllerSelectorEntry(i, pos, GetFontDefault(), gamepadName, entryFontSize, 2.0f, gamepadState, screenWidth, screenHeight);
         } else {
             pos--;
         }
@@ -500,42 +528,43 @@ int main () {
     }
 
     // variables
+
+    // TODO : make screen width and height more consistent so its easier to work with
     int screenWidth = GetScreenWidth();
 
     IDScene currentScene = INPUT_VIEWER;
 
-    int clickedButton = -1;
+    IDGamepadState gamepadState;
+    initGamepadState(&gamepadState);
 
-    int gamepadCount = 0;
-    int selectedGamepad = 0;
-    bool gamepadNeedsRefresh = 1;
+    int clickedButton = -1;
     
     // beautiful loop
     while (!WindowShouldClose()) {
 
         // update
-        if (gamepadNeedsRefresh) {
-            setGamepadCount(&gamepadCount, &selectedGamepad);
-            gamepadNeedsRefresh = 0;
+        if (gamepadState.gamepadNeedsRefresh) {
+            setGamepadCount(&gamepadState);
+            gamepadState.gamepadNeedsRefresh = 0;
         }
 
         if (currentScene == INPUT_VIEWER) {
-            updateButtons(buttons, BUTTON_COUNT, &screenWidth, &clickedButton, &selectedGamepad, &currentScene, &gamepadNeedsRefresh);
+            updateButtons(buttons, BUTTON_COUNT, &screenWidth, &clickedButton, &gamepadState, &currentScene);
         } else {
-            updateControllerSwitcherUI(&gamepadCount, &selectedGamepad, &gamepadNeedsRefresh, &currentScene);
+            updateControllerSwitcherUI(&gamepadState, &currentScene);
         }
 
         // render
         BeginDrawing();
             ClearBackground(BACKGROUND_COLOR);
             if (SHOW_FPS_COUNT) {
-                drawFPSCount();
+                DrawFPS(0, 0); // TODO : stupid lol
             }
 
             if (currentScene == INPUT_VIEWER) {
                 drawButtons(buttons, BUTTON_COUNT);
             } else {
-                drawControllerSwitcherUI(&gamepadCount, &selectedGamepad);
+                drawControllerSwitcherUI(&gamepadState);
             }
         EndDrawing();
     }
