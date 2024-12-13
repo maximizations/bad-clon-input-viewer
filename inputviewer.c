@@ -6,23 +6,23 @@
 #include "raylib.h"
 
 // constants
-const int DO_LIMIT_FPS 1
-const int MAX_FPS 1000
-const bool SHOW_FPS_COUNT 0
+const int DO_LIMIT_FPS = 1;
+const int MAX_FPS = 1000;
+const bool SHOW_FPS_COUNT = 0;
 
-const int INIT_WINDOW_WIDTH 600
-const int INIT_WINDOW_HEIGHT 75
+const int INIT_WINDOW_WIDTH = 600;
+const int INIT_WINDOW_HEIGHT = 75;
 
-const int WINDOW_WIDTH 800
-const int WINDOW_HEIGHT 600
+const int WINDOW_WIDTH = 800;
+const int WINDOW_HEIGHT = 600;
 
-const Color BACKGROUND_COLOR BLACK
+const Color BACKGROUND_COLOR = BLACK;
 
-const int BUTTON_COUNT 7 // set to 8 for 6 fret
-const float BUTTON_BORDER_SIZE 3.0f
-const float BUTTON_WIDTH (float)GetScreenWidth() / BUTTON_COUNT - BUTTON_BORDER_SIZE
-const float BUTTON_HEIGHT BUTTON_WIDTH 
-const float BAR_SPEED 400.0f
+const int BUTTON_COUNT = 7; // set to 8 for 6 fret
+const float BUTTON_BORDER_SIZE = 3.0f;
+const float BUTTON_WIDTH = (float)GetScreenWidth() / BUTTON_COUNT - BUTTON_BORDER_SIZE;
+const float BUTTON_HEIGHT = BUTTON_WIDTH ;
+const float BAR_SPEED = 400.0f;
 
 
 // keybinds
