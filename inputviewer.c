@@ -20,10 +20,11 @@ const Color BACKGROUND_COLOR = BLACK;
 
 const int BUTTON_COUNT = 7; // set to 8 for 6 fret
 const float BUTTON_BORDER_SIZE = 3.0f;
-const float BUTTON_WIDTH = (float)GetScreenWidth() / BUTTON_COUNT - BUTTON_BORDER_SIZE;
-const float BUTTON_HEIGHT = BUTTON_WIDTH ;
+
 const float BAR_SPEED = 400.0f;
 
+#define BUTTON_WIDTH (float)GetScreenWidth() / (float)(BUTTON_COUNT - BUTTON_BORDER_SIZE)
+#define BUTTON_HEIGHT BUTTON_WIDTH
 
 // keybinds
 #define ID_KEY_DOWN (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S) || IsKeyPressed(KEY_J))
