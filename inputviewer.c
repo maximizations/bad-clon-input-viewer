@@ -87,7 +87,7 @@ IDButton createButton (Rectangle rec, float border, Color color) {
         button.updateTime = GetTime();
         button.color = color;
         button.key = 0;
-        button.pressed = false;
+        button.pressed = 0;
 
         //stivector vector;
         //button.idbarVector = vector;
@@ -142,7 +142,7 @@ IDBar createBar (IDButton *button) {
                                      button->rectangle.width - button->border - button->border,
                                      BAR_SPEED * GetFrameTime() };
         bar.color = button->color;
-        bar.is_held = true;
+        bar.is_held = 1;
 
     return bar;
 }
@@ -193,7 +193,7 @@ void releaseBar (IDButton *button) {
 
     IDBar *heldBar = (IDBar*)stivector_at(&(button->idbarVector), button->idbarVector.size - 1);
 
-    heldBar->is_held = false;
+    heldBar->is_held = 0;
 }
 
 
@@ -223,7 +223,7 @@ void setButtonPressed(IDButton *button, IDGamepadState *gamepadState) {
         button->pressed = 1;
         updateTimer(button);
     } else {
-        button->pressed = false;
+        button->pressed = 0;
     }
 }
 
@@ -285,7 +285,7 @@ void updateButton(IDButton *buttons, size_t buttonIndex, int *screenWidth, bool 
     // update the size of the buttons if the screen width changes
     if (*screenWidth != GetScreenWidth()) {
         updateButtonSize(currentButton, buttonIndex);
-        *screenWidthChanged = true;
+        *screenWidthChanged = 1;
     }
 
     // for when a button is left clicked, so you can set a keybind
@@ -306,7 +306,8 @@ void updateButton(IDButton *buttons, size_t buttonIndex, int *screenWidth, bool 
 }
 
 void updateButtons(IDButton *buttons, size_t arrayLength, int *screenWidth, int *clickedButton, IDGamepadState *gamepadState, IDScene *currentScene) {
-    bool screenWidthChanged = false;
+    bool screenWidthChanged = 0;
+    int recheckedScreenWidth = GetScreenWidth();
     
     for (size_t i = 0; i < arrayLength; i++) {
         updateButton(buttons, i, screenWidth, &screenWidthChanged, clickedButton, gamepadState);
@@ -351,7 +352,7 @@ void updateControllerSwitcherUI(IDGamepadState *gamepadState, IDScene *currentSc
     }
     
     if (ID_KEY_REFRESH) {
-        gamepadState->gamepadNeedsRefresh = true;
+        gamepadState->gamepadNeedsRefresh = 1;
     }
 
     if (ID_KEY_ENTER) {
@@ -464,8 +465,8 @@ void drawControllerSelectorTitle(Font font, float fontSize, float fontSpacing) {
     DrawTextEx(font, "Controller selector", textPosition,  fontSize, fontSpacing, WHITE);
 }
 
-void drawControllerSelectorEntry(int index, int pos, Font font, const char *gamepadName, float fontSize, float fontSpacing, IDGamepadState *gamepadState) {
-    Vector2 textPosition = (Vector2){ GetScreenWidth() * 0.125f, pos * fontSize + GetScreenHeight()* 0.25f };
+void drawControllerSelectorEntry(int index, int pos, Font font, const char *gamepadName, float fontSize, float fontSpacing, IDGamepadState *gamepadState, int screenWidth, int screenHeight) {
+    Vector2 textPosition = (Vector2){ screenWidth * 0.125f, pos * fontSize + screenHeight * 0.25f };
     
     Color textColor = WHITE; 
     
@@ -479,17 +480,20 @@ void drawControllerSelectorEntry(int index, int pos, Font font, const char *game
 
 // TODO: THIS FUNCTION IS ASS AND HAS BASICALLY NO THOUGHT PUT INTO IT, 2 BE REWRITTEN LOL THERE IS NO LOGIC BEHIND ANYTHING 
 void drawControllerSwitcherUI(IDGamepadState *gamepadState) {
-    float titleFontSize = clamp(min((float)GetScreenWidth(), (float)GetScreenHeight()) * 0.1f, 24.0f, 40.0f);
+    //TODO : more global management of this, less confusing mess
+    int screenWidth = GetScreenWidth();
+    int screenHeight = GetScreenHeight();
 
+    float titleFontSize = clamp(min((float)screenWidth, (float)screenHeight) * 0.1f, 24.0f, 40.0f);
     drawControllerSelectorTitle(GetFontDefault(), titleFontSize , 2.0f);
 
     for (int i = 0, pos = 0; i < gamepadState->gamepadCount; i++, pos++) {
         const char *gamepadName = GetGamepadName(i);
 
         if (*gamepadName != '\0') {
-            float entryFontSize = clamp(min((float)GetScreenWidth(), (float)GetScreenHeight()) * 0.05f, 16.0f, 24.0f);
+            float entryFontSize = clamp(min((float)screenWidth, (float)screenHeight) * 0.05f, 16.0f, 24.0f);
 
-            drawControllerSelectorEntry(i, pos, GetFontDefault(), gamepadName, entryFontSize, 2.0f, gamepadState);
+            drawControllerSelectorEntry(i, pos, GetFontDefault(), gamepadName, entryFontSize, 2.0f, gamepadState, screenWidth, screenHeight);
         } else {
             pos--;
         }
@@ -519,6 +523,8 @@ int main () {
     }
 
     // variables
+
+    // TODO : make screen width and height more consistent so its easier to work with
     int screenWidth = GetScreenWidth();
 
     IDScene currentScene = INPUT_VIEWER;
@@ -534,11 +540,11 @@ int main () {
         // update
         if (gamepadState.gamepadNeedsRefresh) {
             setGamepadCount(&gamepadState);
-            gamepadState.gamepadNeedsRefresh = false;
+            gamepadState.gamepadNeedsRefresh = 0;
         }
 
         if (currentScene == INPUT_VIEWER) {
-            updateButtons(buttons, BUTTON_COUNT, &clickedButton, &screenWidth, &gamepadState, &currentScene);
+            updateButtons(buttons, BUTTON_COUNT, &screenWidth, &clickedButton, &gamepadState, &currentScene);
         } else {
             updateControllerSwitcherUI(&gamepadState, &currentScene);
         }
