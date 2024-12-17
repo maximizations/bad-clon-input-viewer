@@ -96,8 +96,8 @@ IDButton createButton (Rectangle rec, float border, Color color) {
    return button;
 }
 
-IDButton* createButtonArray(size_t arrayLength, float buttonWidth, float buttonHeight, float borderSize) {  
-    IDButton *buttons = (IDButton*)malloc(arrayLength * sizeof(IDButton));
+IDButton* initButtonArray(IDButton *buttons, size_t arrayLength, float buttonWidth, float buttonHeight, float borderSize) {  
+    //IDButton *buttons = (IDButton*)malloc(arrayLength * sizeof(IDButton)); ugly heap allocation, wtf was i thinking
     
     for (size_t i = 0; i < arrayLength; i++) {
         buttons[i] = createButton((Rectangle){ (float)i * (buttonWidth + borderSize), 0.0f, buttonWidth, buttonHeight }, borderSize, GREEN);
@@ -512,7 +512,8 @@ int main () {
     SetWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
     SetExitKey(KEY_F4);
 
-    IDButton *buttons = createButtonArray(BUTTON_COUNT, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_BORDER_SIZE); 
+    IDButton buttons[BUTTON_COUNT];
+    initButtonArray(buttons, BUTTON_COUNT, BUTTON_WIDTH, BUTTON_HEIGHT, BUTTON_BORDER_SIZE); 
     
     switch (BUTTON_COUNT) {
         case 7: setButtonColor5Fret(buttons);
@@ -568,8 +569,9 @@ int main () {
     // freeing everything
     freeBarVecs(buttons, BUTTON_COUNT);
 
-    free(buttons);
-    buttons = NULL;
+    // why did i even use heap allocation lol
+    //free(buttons);
+    //buttons = NULL;
 
     return 0;
 }
