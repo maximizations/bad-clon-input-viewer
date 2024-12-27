@@ -12,7 +12,7 @@ typedef struct {
     size_t capacity;
     size_t element_size;
 
-    void *data;
+    char *data;
 } stivector;
 
 int stivector_init(stivector *vector, size_t capacity, size_t element_size) {
@@ -20,7 +20,7 @@ int stivector_init(stivector *vector, size_t capacity, size_t element_size) {
     vector->capacity = capacity;
     vector->element_size = element_size;
 
-    vector->data = malloc(capacity * element_size);
+    vector->data = (char*)malloc(capacity * element_size);
     if (vector->data == NULL) {
         // TODO : error handling
         fprintf(stderr, "could not allocate vector\n");
@@ -43,7 +43,7 @@ int stivector_resize(stivector *vector, size_t capacity) {
         return -1;
     }
     
-    vector->data = realloc(vector->data, capacity * vector->element_size);
+    vector->data = (char*)realloc(vector->data, capacity * vector->element_size);
     if (vector->data == NULL) {
         // TODO
         fprintf(stderr, "realloc failed oops\n");

@@ -17,9 +17,11 @@ const int INIT_WINDOW_HEIGHT = 75;
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 600;
 
-const Color BACKGROUND_COLOR = BLACK;
+#define BACKGROUND_COLOR BLACK //msvc bitches about this if i define it as constant for some reason
 
-const int BUTTON_COUNT = 7; // set to 8 for 6 fret
+#define BUTTON_COUNT 7 // set to 8 for 6 fret
+                       // defined as macro so msvc doesnt bitch
+
 const float BUTTON_BORDER_SIZE = 3.0f;
 
 const float BAR_SPEED = 400.0f;
@@ -37,8 +39,15 @@ const float BAR_SPEED = 400.0f;
 
 // simple macros for simple things
 #define clamp(f, min, max) ((f) < (min) ? (min) : (f) > (max) ? (max) : (f))
-#define max(x, y) ((x) > (y) ? (x) : (y))
-#define min(x, y) ((x) < (y) ? (x) : (y))
+
+// max and min are predefined in msvc for some reason sooo ???
+#ifndef max
+    #define max(x, y) ((x) > (y) ? (x) : (y))
+#endif
+
+#ifndef min
+    #define min(x, y) ((x) < (y) ? (x) : (y))
+#endif
 
 
 // """""scenes""""" (there are only 2 lmao)
