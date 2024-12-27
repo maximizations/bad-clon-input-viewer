@@ -35,3 +35,6 @@ bin/**
 dryrun.log
 targets.log
 inputviewer
+
+Makefile
+dist/

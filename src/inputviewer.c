@@ -3,7 +3,7 @@
 
 
 #include <stdint.h>
-#include "stivector.h"
+#include "../include/stivector.h"
 #include "raylib.h"
 
 // constants

@@ -1,0 +1,45 @@
+# note: this expects to have access to bash, which you should have if you have git for windows
+# note 2: idk how to windows so some of this might be ass
+
+CC=cl
+CFLAGS=/W4 /nologo
+LIBS=raylib
+OUTPUT=inputviewer
+
+SRC_DIR=src
+OUTPUT_DIR=dist
+
+RELEASE_FLAGS=/O2
+DEBUG_FLAGS=/Od /Z7
+# idk man
+OUTPUT_FLAGS=/Fo$(OUTPUT_DIR)\\$(OUTPUT).obj /Fe$(OUTPUT_DIR)\\$(OUTPUT).exe
+
+FILES=$(wildcard $(SRC_DIR)/*.c)
+INCLUDE_FLAGS=$(shell pkg-config --cflags --msvc-syntax $(LIBS))
+LIB_FLAGS=$(shell pkg-config --libs --msvc-syntax $(LIBS))
+
+.PHONY: default release debug run clean
+
+default: debug
+
+debug:
+	@echo "Compiling debug build..."
+	@mkdir -p dist
+	$(CC) $(CFLAGS) $(DEBUG_FLAGS) $(INCLUDE_FLAGS) $(OUTPUT_FLAGS) $(FILES) /link $(LIB_FLAGS) /debug 
+
+release:
+	@echo "Compiling release build..."
+	@mkdir -p dist
+	$(CC) $(CFLAGS) $(RELEASE_FLAGS) $(INCLUDE_FLAGS) $(OUTPUT_FLAGS) $(FILES) /link $(LIB_FLAGS) /release 
+
+run:
+ifneq ("$(wildcard $(OUTPUT_DIR)/$(OUTPUT).exe)","")
+	@echo "Running..." ;
+	$(OUTPUT_DIR)/$(OUTPUT).exe
+else
+	@echo "Can't find $(OUTPUT_DIR)/$(OUTPUT).exe. Make sure to build it."
+endif
+
+clean:
+	@echo "Cleaning $(OUTPUT)..."
+	@rm $(OUTPUT_DIR)/*

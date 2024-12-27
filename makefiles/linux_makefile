@@ -1,0 +1,39 @@
+CC=clang
+CFLAGS=-Wall -Wextra
+LIBS=raylib
+OUTPUT=inputviewer
+
+SRC_DIR=src
+OUTPUT_DIR=dist
+
+RELEASE_FLAGS=-O3
+DEBUG_FLAGS=-Og -g3
+
+FILES=$(wildcard $(SRC_DIR)/*.c)
+LIB_FLAGS=$(shell pkg-config --libs --cflags $(LIBS))
+
+.PHONY: default release debug run clean
+
+default: debug
+
+debug:
+	@echo "Compiling debug build..."
+	@mkdir -p dist
+	$(CC) $(CFLAGS) $(DEBUG_FLAGS) $(LIB_FLAGS) -o $(OUTPUT_DIR)/$(OUTPUT) $(FILES)
+
+release:
+	@echo "Compiling release build..."
+	@mkdir -p dist
+	$(CC) $(CFLAGS) $(RELEASE_FLAGS) $(LIB_FLAGS) -o $(OUTPUT_DIR)/$(OUTPUT) $(FILES)
+
+run:
+ifneq ("$(wildcard $(OUTPUT_DIR)/$(OUTPUT))","")
+	@echo "Running..."
+	$(OUTPUT_DIR)/$(OUTPUT)
+else
+	@echo "Can't find $(OUTPUT_DIR)/$(OUTPUT). Make sure to build it."
+endif
+
+clean:
+	@echo "Cleaning $(OUTPUT)..."
+	@rm $(OUTPUT_DIR)/*
