@@ -17,10 +17,10 @@ const int INIT_WINDOW_HEIGHT = 75;
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 600;
 
-#define BACKGROUND_COLOR BLACK //msvc bitches about this if i define it as constant for some reason
+#define BACKGROUND_COLOR BLACK    //msvc bitches about this if i define it as constant for some reason
 
-#define BUTTON_COUNT 7 // set to 8 for 6 fret
-                       // defined as macro so msvc doesnt bitch
+#define BUTTON_COUNT 7     // set to 8 for 6 fret
+                           // defined as macro so msvc doesnt bitch
 
 const float BUTTON_BORDER_SIZE = 3.0f;
 
