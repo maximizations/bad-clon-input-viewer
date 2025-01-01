@@ -498,7 +498,7 @@ void drawControllerSwitcherUI(IDGamepadState *gamepadState) {
     for (int i = 0, pos = 0; i < gamepadState->gamepadCount; i++, pos++) {
         const char *gamepadName = GetGamepadName(i);
 
-        if (*gamepadName != '\0') {
+        if (*gamepadName != '\0' || *gamepadName != NULL) {
             float entryFontSize = clamp(min((float)screenWidth, (float)screenHeight) * 0.05f, 16.0f, 24.0f);
 
             drawControllerSelectorEntry(i, pos, GetFontDefault(), gamepadName, entryFontSize, 2.0f, gamepadState, screenWidth, screenHeight);

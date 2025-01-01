@@ -38,3 +38,5 @@ inputviewer
 
 Makefile
 dist/
+.vscode/
+.vs/
